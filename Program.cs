@@ -151,8 +151,10 @@ namespace CarApp_michelle
                 Console.WriteLine($"Brændstoftype: " + fuelTypeStr);
                 Console.WriteLine($"Bilen kører " + kmPerLiter + " km/l");
                 Console.WriteLine($"Den originale kilometerstand var: {kmCount} km");
-                double kmCountNew = Math.Round(kmCount + distance); // Bruger Math.Round() til at runde op/ned til nærmeste hele tal, fordi kilometertælleren skulle være en double, men jeg føler det måske lyder lidt fjollet med decimaler i en kilometertæller idk jeg kender ikke så meget til biler for at være helt ærlig :)
-                Console.WriteLine($"Den nye kilometerstand er: {kmCountNew} km");
+
+                kmCount += distance;
+                
+                Console.WriteLine($"Den nye kilometerstand er: {Math.Round(kmCount)} km"); // Bruger Math.Round() til at runde op/ned til nærmeste hele tal, fordi kilometertælleren skulle være en double, men jeg føler det måske lyder lidt fjollet med decimaler i en kilometertæller idk jeg kender ikke så meget til biler for at være helt ærlig :)
                 Console.WriteLine($"Total brændstofudgift: {calculatedTripPrice} kr.");
             }
             return calculatedTripPrice;
