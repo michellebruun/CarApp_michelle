@@ -7,57 +7,119 @@ namespace CarApp_michelle
 {
     internal class Program
     {
-        //Initaliser variabler uden for Main metoden, så de er tilgængelige i hele programmet
-        static string brand = "";
-        static string model = "";
-        static int year = 0;
-        static char gearType = ' ';
-        static char fuelType = ' ';
-        static double kmPerLiter = 0;
-        static double kmCount = 0;
-        static bool isEngineOn = true;
-        static double calculatedTripPrice = 0;
+        // lokale variable som bruges ved indtastning af data, og oprettelse af et car object
+        static string brand;
+        static string model;
+        static int year;
+        static char gearType;
+        static char fuelType;
+        static double kmPerLiter;
+        static double kmCount;
+
 
         static void Main(string[] args)
         {
+            List<Car> carList = new List<Car>();
+            int carIndex = -1;
+
+            double price = 0;
+
+            ShowMenu();
+
             //Kør hovedmenuen
             bool isRunning = true;
             while (isRunning)
             {
-                Console.WriteLine("\n=== Hovedmenu ===");
-                Console.WriteLine("1) Indtast biloplysninger");
-                Console.WriteLine("2) Kør en køretur");
-                Console.WriteLine("3) Beregn prisen på en køretur");
-                Console.WriteLine("4) Er kilometerstanden et palindrom?");
-                Console.WriteLine("5) Udskriv biloplysninger");
-                Console.WriteLine("6) Vis hele holdets biler");
-                Console.WriteLine("7) Afslut");
-
+                if (carIndex >= 0 && carList[carIndex] != null)
+                {
+                    Console.Write($"\nAktuel bil: {carIndex + 1} - {carList[carIndex].GetCarDetails()} ");
+                }
                 Console.Write("\nVælg en mulighed: ");
                 string userInput = Console.ReadLine();
-
+                
                 switch (userInput)
                 {
-                    case "1":
+                    case "0": // alternativ til "1" - opretter en bil med default data og overskriver data med indput
+                        carList.Add(new Car("-", "-", 1886, 'M', 'B', 1, 0));
+                        carIndex = carList.Count - 1;
+                        ReadCarDetails(carList[carIndex]);
+                        break;
+                    case "1": // tager indtastede data og gemmer i lokale variable. Bruger disse til at opretten et car object
                         ReadCarDetails();
+                        carList.Add(new Car(brand, model, year, gearType, fuelType, kmPerLiter, kmCount));
+                        carIndex = carList.Count - 1;
                         break;
                     case "2":
-                        Console.Write("Indtast distance i km: ");
-                        double input2 = Convert.ToDouble(Console.ReadLine());
-                        Drive(input2);
+                        if (carIndex >= 0 && carIndex < carList.Count)
+                        {
+                            Console.Write("Indtast distance i km: ");
+                            double input2 = Convert.ToDouble(Console.ReadLine());
+                            carList[carIndex].Drive(input2);
+                        }
                         break;
                     case "3":
-                        Console.Write("Indtast distance i km: ");
-                        double input3 = Convert.ToDouble(Console.ReadLine());
-                        calculatedTripPrice = CalculateTripPrice(input3, fuelType);
+                        if (carIndex >= 0 && carIndex < carList.Count)
+                        {
+                            Console.Write("Indtast distance i km: ");
+                            double input3 = Convert.ToDouble(Console.ReadLine());
+                            price = carList[carIndex].CalculateTripPrice(input3, carList[carIndex].FuelType);
+                        }
                         break;
                     case "4":
-                        IsPalindrome(Convert.ToInt32(kmCount));
+                        if (carIndex >= 0 && carIndex < carList.Count)
+                        {
+                            carList[carIndex].IsPalindrome(Convert.ToInt32(carList[carIndex].KmCount));
+                        }
                         break;
                     case "5":
-                        ShowCarDetails();
+                        if (carIndex >= 0 && carIndex < carList.Count)
+                        {
+                            carList[carIndex].ShowCarDetails();
+                        }
                         break;
-                    case "7":
+                    case "6":
+                        for (int i = 0; i < carList.Count; i++)
+                        {
+                            carList[i].ShowCarDetails();
+                        }
+                        break;
+                    case "7": //
+                        if (carIndex >= 0 && carIndex < carList.Count)
+                        {
+                            if (carList[carIndex].IsEngineOn)
+                            {
+                                carList[carIndex].IsEngineOn = false;
+                                Console.WriteLine($"Motoren er slukket");
+                            }
+                            else
+                            {
+                                carList[carIndex].IsEngineOn = true;
+                                Console.WriteLine($"Motoren er tændt... Vroom vroom og sårn");
+                            }
+                        }
+                        break;
+
+                    case "9":
+                        for (int i = 0; i < carList.Count; i++)
+                        {
+                            Console.Write($"{i + 1}: {carList[i].Brand} {carList[i].Model} | ");
+                        }
+                        Console.Write("\nVælg bil: ");
+                        int input9 = Convert.ToInt16(Console.ReadLine());
+                        if (input9 > 0 && input9 <= carList.Count)
+                        {
+                            carIndex = input9 - 1;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Bil nr. {input9} findes ikke");
+                        }
+                        break;
+
+                    case "m":
+                        ShowMenu();
+                        break;
+                    case "x":
                         isRunning = false;
                         Console.WriteLine("Afslutter... Farvel :)");
                         break;
@@ -65,17 +127,35 @@ namespace CarApp_michelle
                         Console.WriteLine("Ugyldigt valg, prøv igen");
                         break;
                 }
+
+                if (carIndex < 0 || carIndex >= carList.Count)
+                {
+                    Console.WriteLine("Ingen biler registreret");
+                }
+
             }
         }
 
-
-
-
+        static void ShowMenu()
+        {
+            Console.WriteLine("\n=== Hovedmenu ===");
+            Console.WriteLine("1) Indtast biloplysninger");
+            Console.WriteLine("2) Kør en køretur");
+            Console.WriteLine("3) Beregn prisen på en køretur");
+            Console.WriteLine("4) Er kilometerstanden et palindrom?");
+            Console.WriteLine("5) Udskriv biloplysninger");
+            Console.WriteLine("6) Vis hele holdets biler");
+            Console.WriteLine("7) Start/stop motoren");
+            Console.WriteLine("9) Vælg bil");
+            Console.WriteLine("m) Menu");
+            Console.WriteLine("x) Afslut");
+        }
 
         // ================================ 1) Indtast biloplysninger ================================
-        static void ReadCarDetails()
+        static void ReadCarDetails() // løsning 1
         {
-            //Spørg om brugerens bil og sæt variablerne fra brugerens input
+            // Spørg om brugerens bil og sæt variablerne fra brugerens input
+            // Data gemmes i lokale variable som efterfølgende bruges til at oprette et car object 
             Console.Write("Indtast bilmærke: ");
             brand = Console.ReadLine();
             Console.Write("Indtast bilmodel: ");
@@ -92,142 +172,26 @@ namespace CarApp_michelle
             kmCount = Convert.ToInt32(Console.ReadLine());
         }
 
-
-
-
-
-        // ================================ 2) Kør en køretur ================================
-        static void Drive(double distance) // Tager en lokal variabel "distance" ind som parameter-input i metoden
+        static void ReadCarDetails(Car car) // løsning 0
         {
-            if (isEngineOn == true)
-            {
-                Console.WriteLine($"\nDen originale kilometerstand: {kmCount}");
-                Console.WriteLine("Starter køretur...");
-
-                kmCount += distance;
-
-                Console.WriteLine($"Du har nu kørt: {distance}");
-                Console.WriteLine($"Den nye kilometerstand er: {kmCount}");
-            }
+            // Spørg om brugerens bil og sæt variablerne fra brugerens input
+            // Parameteren 'car' er et car object, og dets data sættes direkte via set funktioner
+            Console.Write("Indtast bilmærke: ");
+            car.Brand = Console.ReadLine();
+            Console.Write("Indtast bilmodel: ");
+            car.Model = Console.ReadLine();
+            Console.Write("Indtast årgang: ");
+            car.Year = Convert.ToInt32(Console.ReadLine());
+            Console.Write("Indtast geartype (A for automatisk, M for manuel): ");
+            car.GearType = Console.ReadLine()[0];
+            Console.Write("Hvilken type brændstof? (B for benzin, D for diesel): ");
+            car.FuelType = Console.ReadLine()[0];
+            Console.Write("Hvor langt kan bilen køre på en liter brændstof?: ");
+            car.KmPerLiter = Convert.ToDouble(Console.ReadLine());
+            Console.Write("Hvad er bilens nuværende kilometerstand?: ");
+            car.KmCount = Convert.ToInt32(Console.ReadLine());
         }
 
-
-
-
-
-        // ================================ 3) Udregn prisen på en køretur ================================
-        static double CalculateTripPrice(double distance, char fuelType)
-        {
-            if (kmPerLiter == 0)          // Check om bilens kmPerLiter er 0, for at undgå et crash pga. division med 0
-            {
-                Console.WriteLine("Fejl: kmPerLiter kan ikke være 0!");
-            }
-            else if (fuelType != 'B' && fuelType != 'D') // Check om brændstofstypens værdi er noget andet end enten (B)enzin eller (D)iesel, og vis en fejl hvis den er ( != bruges som "ikke lig med", && bruges som "og" )
-            {
-                Console.WriteLine("Fejl: Ukendt brændstoftype!");
-            }
-            else                          // Hvis vi ikke støder på nogen af de fejl, når vi herned og kan begynde at udregne køreturens pris
-            {
-                double literPrice = 0;    // Vi ærklærer først bare lige hurtigt en lokal variabel for literprisen på brændstof,
-                string fuelTypeStr = "";  // (og en string til fuelType for at kunne skrive f.eks. "Benzin" i stedet for "B", da fuelType er en char)
-                switch (fuelType)         // og sætter deres værdi baseret på brændstofstypen, så vi er klar til at bruge literprisen i udregningen
-                {
-                    case 'B':
-                        literPrice = 13.49;
-                        fuelTypeStr = "Benzin";
-                        break;
-                    case 'D':
-                        literPrice = 12.29;
-                        fuelTypeStr = "Diesel";
-                        break;
-                }
-
-                //Beregn prisen for køreturen
-                double fuelNeeded = distance / kmPerLiter;     // Distancen som brugeren skrev ind divideret med bilens km per liter, giver os den nødvendige mængde brændstof for turen
-                calculatedTripPrice = fuelNeeded * literPrice; // Nu ved vi hvor meget brændstof vi skal bruge, og vi kan finde turens pris ved at gange det med literprisen
-
-                Console.WriteLine("\n================ Oplysninger om køreturen ================");
-
-                Console.WriteLine($"Brændstoftype: " + fuelTypeStr);
-                Console.WriteLine($"Bilen kører " + kmPerLiter + " km/l");
-                Console.WriteLine($"Den originale kilometerstand var: {kmCount} km");
-
-                kmCount += distance;
-                
-                Console.WriteLine($"Den nye kilometerstand er: {Math.Round(kmCount)} km"); // Bruger Math.Round() til at runde op/ned til nærmeste hele tal, fordi kilometertælleren skulle være en double, men jeg føler det måske lyder lidt fjollet med decimaler i en kilometertæller idk jeg kender ikke så meget til biler for at være helt ærlig :)
-                Console.WriteLine($"Total brændstofudgift: {calculatedTripPrice} kr.");
-            }
-            return calculatedTripPrice;
-
-        }
-
-
-
-
-
-        // ================================ 4) Er kilometerstanden et palindrom? ================================
-        static bool IsPalindrome(int kmInput)
-        {
-            string kmStr = kmInput.ToString(); // Kilometertælleren er en double, vi laver den om til en string for at kunne behandle tallene som tegn i stedet for tal
-
-            if (kmStr.Length <= 2) // Hvis kilometertælleren er lig med eller kortere end 2 tegn, ved vi allerede at det må være et palindrom, så vi kan stoppe her allerede med "return = true;"
-            {
-                Console.WriteLine($"Ja, {kmCount} er et palindrom! :)");
-                return true;
-            }
-
-            for (int i = 0; i < kmStr.Length / 2; i++) // for loop der tæller "i" op - fra 0 til længden af kmStr, divideret med 2, så den stopper når den når halvejs igennem kmStr
-            {
-                if (kmStr[i] != kmStr[kmStr.Length - (i + 1)]) // Starter ved index [i] og sammenligner det med index [længden af kmStr - (i + 1)], og tjekker om de ikke er lig med hinanden
-                                                               // f.eks. første step sammenligner det første tegn med det sidste, næste step sammenligner det næst-første med det næst-sidste, indtil de møder hinanden på midten, fordi for-loopet stopper når det er nået til "kmStr.Length / 2"
-                {
-                    Console.WriteLine($"Nej, {kmCount} er ikke et palindrom!");
-                    return false;
-                }
-            }
-            Console.WriteLine($"Ja, {kmCount} er et palindrom! :)");
-            return true;
-        }
-
-
-
-
-
-        // ================================ 5) Vis biloplysninger ================================
-        static void ShowCarDetails()
-        {
-            string fuelTypeStr = "";
-            switch (fuelType)
-            {
-                case 'B':
-                    fuelTypeStr = "Benzin";
-                    break;
-                case 'D':
-                    fuelTypeStr = "Diesel";
-                    break;
-            }
-
-            Console.WriteLine("\n================ Oplysninger om din bil ================");
-
-            Console.WriteLine($"Bilmærke: {brand}");
-            Console.WriteLine($"Bilmodel: {model}");
-            Console.WriteLine($"Årgang: {year}");
-            Console.WriteLine($"Gear {gearType}");
-            Console.WriteLine($"Brændstoftype: {fuelTypeStr}");
-            Console.WriteLine($"Kører {kmPerLiter} km/l");
-            Console.WriteLine($"Kilometerstand: {kmCount} km");
-            Console.WriteLine($"Prisen for en typisk køretur er: {calculatedTripPrice} kr.");
-
-            Console.WriteLine("========================================================\n");
-        }
-
-
-
-
-
-        // ================================ 6) Vis hele holdets biler ================================
-
-        // Den her ved jeg ikke hvordan vi skulle lave uden at bruge andre klasser, som vi først begynder på at lære om om et par uger aahhh
     }
 
 }
