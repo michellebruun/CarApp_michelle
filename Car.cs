@@ -10,7 +10,7 @@ namespace CarApp_michelle
         private string _model;
         private int _year;
         private char _gearType;
-        private char _fuelType;
+        private FuelTypeEnum _fuelType;
         private double _kmPerLiter;
         private double _kmCount;
         private bool _isEngineOn;
@@ -48,10 +48,9 @@ namespace CarApp_michelle
             get { return _kmCount; }
             set { if (value > 0) _kmCount = value; }
         }
-        public char FuelType
+        public FuelTypeEnum FuelType
         {
-            get { return _fuelType; }
-            set { _fuelType = value; }
+            get; set;
         }
         public bool IsEngineOn
         {
@@ -60,7 +59,7 @@ namespace CarApp_michelle
         }
 
         // ================================ Konstruktør ================================
-        public Car(string brand, string model, int year, char gearType, char fuelType, double kmPerLiter, double kmCount)
+        public Car(string brand, string model, int year, char gearType, FuelTypeEnum fuelType, double kmPerLiter, double kmCount)
         {
             Brand = brand;
             Model = model;
@@ -105,13 +104,13 @@ namespace CarApp_michelle
 
       
         // ================================ 3) Udregn prisen på en køretur ================================
-        public double CalculateTripPrice(double distance, char fuelType)
+        public double CalculateTripPrice(double distance, FuelTypeEnum fuelType)
         {
             if (KmPerLiter == 0)          // Check om bilens kmPerLiter er 0, for at undgå et crash pga. division med 0
             {
                 Console.WriteLine("Fejl: kmPerLiter kan ikke være 0!");
             }
-            else if (fuelType != 'b' && fuelType != 'B' && fuelType != 'd' && fuelType != 'D') // Check om brændstofstypens værdi er noget andet end enten (B)enzin eller (D)iesel, og vis en fejl hvis den er ( != bruges som "ikke lig med", && bruges som "og" )
+            else if (fuelType != FuelTypeEnum.Benzin && fuelType != FuelTypeEnum.Diesel) // Check om brændstofstypens værdi er noget andet end enten (B)enzin eller (D)iesel, og vis en fejl hvis den er ( != bruges som "ikke lig med", && bruges som "og" )
             {
                 Console.WriteLine("Fejl: Ukendt brændstoftype!");
             }
@@ -121,15 +120,13 @@ namespace CarApp_michelle
                 string fuelTypeStr = "";  // (og en string til fuelType for at kunne skrive f.eks. "Benzin" i stedet for "B", da fuelType er en char)
                 switch (fuelType)         // og sætter deres værdi baseret på brændstofstypen, så vi er klar til at bruge literprisen i udregningen
                 {
-                    case 'b':
-                    case 'B':
+                    case FuelTypeEnum.Benzin:
                         literPrice = 13.49;
-                        fuelTypeStr = "Benzin";
+                        fuelTypeStr = fuelType.ToString(); // "Benzin";
                         break;
-                    case 'd':
-                    case 'D':
+                    case FuelTypeEnum.Diesel:
                         literPrice = 12.29;
-                        fuelTypeStr = "Diesel";
+                        fuelTypeStr = fuelType.ToString(); // "Diesel";
                         break;
                 }
 
@@ -181,18 +178,6 @@ namespace CarApp_michelle
         // ================================ 5) Vis biloplysninger ================================
         public void ShowCarDetails()
         {
-            string fuelTypeStr = "";
-            switch (FuelType)
-            {
-                case 'b':
-                case 'B':
-                    fuelTypeStr = "Benzin";
-                    break;
-                case 'd':
-                case 'D':
-                    fuelTypeStr = "Diesel";
-                    break;
-            }
 
             Console.WriteLine("\n================ Oplysninger om din bil ================");
 
@@ -200,14 +185,12 @@ namespace CarApp_michelle
             Console.WriteLine($"Bilmodel: {Model}");
             Console.WriteLine($"Årgang: {Year}");
             Console.WriteLine($"Gear {GearType}");
-            Console.WriteLine($"Brændstoftype: {fuelTypeStr}");
+            Console.WriteLine($"Brændstoftype: {FuelType}");
             Console.WriteLine($"Kører {KmPerLiter} km/l");
             Console.WriteLine($"Kilometerstand: {KmCount} km");
             Console.WriteLine($"Prisen for en typisk køretur er: {calculatedTripPrice} kr.");
 
             Console.WriteLine("========================================================\n");
         }
-
-
     }
 }

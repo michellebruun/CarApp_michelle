@@ -1,7 +1,9 @@
 ﻿using Microsoft.VisualBasic.FileIO;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ConstrainedExecution;
 
 namespace CarApp_michelle
 {
@@ -12,15 +14,16 @@ namespace CarApp_michelle
         static string model;
         static int year;
         static char gearType;
-        static char fuelType;
+        static FuelTypeEnum fuelType;
         static double kmPerLiter;
         static double kmCount;
 
+        private static List<Car> carList = new List<Car>();
+        private static int carIndex = -1;
 
         static void Main(string[] args)
         {
-            List<Car> carList = new List<Car>();
-            int carIndex = -1;
+            
 
             double price = 0;
 
@@ -40,11 +43,11 @@ namespace CarApp_michelle
                 switch (userInput)
                 {
                     case "0": // alternativ til "1" - opretter en bil med default data og overskriver data med indput
-                        carList.Add(new Car("-", "-", 1886, 'M', 'B', 1, 0));
+                        carList.Add(new Car("-", "-", 1886, 'M', FuelTypeEnum.Benzin, 1, 0));
                         carIndex = carList.Count - 1;
                         ReadCarDetails(carList[carIndex]);
                         break;
-                    case "1": // tager indtastede data og gemmer i lokale variable. Bruger disse til at opretten et car object
+                    case "1": // tager indtastede data og gemmer i lokale variable. Bruger disse til at oprette et car object
                         ReadCarDetails();
                         carList.Add(new Car(brand, model, year, gearType, fuelType, kmPerLiter, kmCount));
                         carIndex = carList.Count - 1;
@@ -136,6 +139,66 @@ namespace CarApp_michelle
             }
         }
 
+
+
+        static void SaveCars()
+        {
+            string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            using (StreamWriter outputFile = new StreamWriter(Path.Combine(docPath, "SavedCars.txt")))
+            {
+                foreach (Car car in carList)
+                    outputFile.WriteLine($"{car.Brand},{car.Model},{car.Year},{car.FuelType},{car.GearType},{car.KmPerLiter},{car.KmCount}");
+            }
+            Console.WriteLine("Biler gemt i filen: SavedCars.txt");
+        }
+
+
+
+        static void LoadCars()
+        {
+            try
+            {
+                string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                using StreamReader reader = new StreamReader(Path.Combine(docPath, "SavedCars.txt"));
+
+                carList.Clear();
+                string text = "";
+                do
+                {
+                    text = reader.ReadLine();  //.ReadToEnd();
+                    if (text != null)
+                    {
+                        List<string> carText = new List<string>();
+                        for (int i = 0; i < 6; i++)
+                        {
+                            carText.Add(text.Substring(0, text.IndexOf(',')));
+                            text = text.Substring(text.IndexOf(',') + 1, text.Length - (text.IndexOf(',') + 1));
+                        }
+                        carText.Add(text);
+                        carList.Add(new Car(brand, model, year, gearType, fuelType, kmPerLiter, kmCount));
+                        carIndex = carList.Count - 1;
+                        carList[carIndex].Brand = carText[0];
+                        carList[carIndex].Model = carText[1];
+                        carList[carIndex].Year = Convert.ToInt32(carText[2]);
+                        carList[carIndex].FuelType = Enum.TryParse(carText[3], result: out FuelType);
+                        carList[carIndex].GearType = Convert.ToChar(carText[4]);
+                        carList[carIndex].KmPerLiter = Convert.ToDouble(carText[5]);
+                        carList[carIndex].KmCount = Convert.ToDouble(carText[6]);
+                    }
+
+                } while (text != null);
+
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine("The file could not be read:");
+                Console.WriteLine(e.Message);
+            }
+        }
+
+
+
         static void ShowMenu()
         {
             Console.WriteLine("\n=== Hovedmenu ===");
@@ -151,6 +214,8 @@ namespace CarApp_michelle
             Console.WriteLine("x) Afslut");
         }
 
+
+
         // ================================ 1) Indtast biloplysninger ================================
         static void ReadCarDetails() // løsning 1
         {
@@ -165,7 +230,18 @@ namespace CarApp_michelle
             Console.Write("Indtast geartype (A for automatisk, M for manuel): ");
             gearType = Console.ReadLine()[0];
             Console.Write("Hvilken type brændstof? (B for benzin, D for diesel): ");
-            fuelType = Console.ReadLine()[0];
+            char input = Console.ReadLine()[0];
+            switch (input)
+            {
+                case 'b':
+                case 'B':
+                    fuelType = FuelTypeEnum.Benzin;
+                    break;
+                case 'd':
+                case 'D':
+                    fuelType = FuelTypeEnum.Diesel;
+                    break;
+            }
             Console.Write("Hvor langt kan bilen køre på en liter brændstof?: ");
             kmPerLiter = Convert.ToDouble(Console.ReadLine());
             Console.Write("Hvad er bilens nuværende kilometerstand?: ");
@@ -185,7 +261,15 @@ namespace CarApp_michelle
             Console.Write("Indtast geartype (A for automatisk, M for manuel): ");
             car.GearType = Console.ReadLine()[0];
             Console.Write("Hvilken type brændstof? (B for benzin, D for diesel): ");
-            car.FuelType = Console.ReadLine()[0];
+            char input = Console.ReadLine()[0];
+            switch (input)
+            {
+                case 'b':
+                case 'B':
+                    car.FuelType = FuelTypeEnum.Benzin;
+                    break;
+
+            }
             Console.Write("Hvor langt kan bilen køre på en liter brændstof?: ");
             car.KmPerLiter = Convert.ToDouble(Console.ReadLine());
             Console.Write("Hvad er bilens nuværende kilometerstand?: ");
