@@ -9,23 +9,11 @@ namespace CarApp_michelle
 {
     internal class Program
     {
-        // lokale variable som bruges ved indtastning af data, og oprettelse af et car object
-        static string brand;
-        static string model;
-        static int year;
-        static char gearType;
-        static FuelTypeEnum fuelType;
-        static double kmPerLiter;
-        static double kmCount;
-
         private static List<Car> carList = new List<Car>();
         private static int carIndex = -1;
 
         static void Main(string[] args)
         {
-            
-
-            double price = 0;
 
             ShowMenu();
 
@@ -39,64 +27,60 @@ namespace CarApp_michelle
                 }
                 Console.Write("\nVælg en mulighed: ");
                 string userInput = Console.ReadLine();
-                
+
                 switch (userInput)
                 {
-                    case "0": // alternativ til "1" - opretter en bil med default data og overskriver data med indput
-                        carList.Add(new Car("-", "-", 1886, 'M', FuelTypeEnum.Benzin, 1, 0));
-                        carIndex = carList.Count - 1;
-                        ReadCarDetails(carList[carIndex]);
-                        break;
-                    case "1": // tager indtastede data og gemmer i lokale variable. Bruger disse til at oprette et car object
-                        ReadCarDetails();
-                        carList.Add(new Car(brand, model, year, gearType, fuelType, kmPerLiter, kmCount));
+                    case "1": // Indtast biloplysninger
+                        carList.Add(ReadCarDetails());
                         carIndex = carList.Count - 1;
                         break;
+
                     case "2":
                         if (carIndex >= 0 && carIndex < carList.Count)
                         {
-                            Console.Write("Indtast distance i km: ");
-                            double input2 = Convert.ToDouble(Console.ReadLine());
-                            carList[carIndex].Drive(input2);
+                            carList[carIndex].Drive(ReadTripDetails());
                         }
                         break;
+
                     case "3":
                         if (carIndex >= 0 && carIndex < carList.Count)
                         {
-                            Console.Write("Indtast distance i km: ");
-                            double input3 = Convert.ToDouble(Console.ReadLine());
-                            price = carList[carIndex].CalculateTripPrice(input3, carList[carIndex].FuelType);
+                            carList[carIndex].CalculateTripPrice();
                         }
                         break;
+
                     case "4":
                         if (carIndex >= 0 && carIndex < carList.Count)
                         {
                             carList[carIndex].IsPalindrome(Convert.ToInt32(carList[carIndex].KmCount));
                         }
                         break;
+
                     case "5":
                         if (carIndex >= 0 && carIndex < carList.Count)
                         {
                             carList[carIndex].ShowCarDetails();
                         }
                         break;
+
                     case "6":
                         for (int i = 0; i < carList.Count; i++)
                         {
                             carList[i].ShowCarDetails();
                         }
                         break;
-                    case "7": //
+
+                    case "7":
                         if (carIndex >= 0 && carIndex < carList.Count)
                         {
                             if (carList[carIndex].IsEngineOn)
                             {
-                                carList[carIndex].IsEngineOn = false;
+                                carList[carIndex].TurnOffEngine();
                                 Console.WriteLine($"Motoren er slukket");
                             }
                             else
                             {
-                                carList[carIndex].IsEngineOn = true;
+                                carList[carIndex].TurnOnEngine();
                                 Console.WriteLine($"Motoren er tændt... Vroom vroom og sårn");
                             }
                         }
@@ -119,10 +103,20 @@ namespace CarApp_michelle
                         }
                         break;
 
+                    case "s":
+                    case "S":
+                        SaveCars();
+                        break;
+                    case "l":
+                    case "L":
+                        LoadCars();
+                        break;
                     case "m":
+                    case "M":
                         ShowMenu();
                         break;
                     case "x":
+                    case "X":
                         isRunning = false;
                         Console.WriteLine("Afslutter... Farvel :)");
                         break;
@@ -176,15 +170,20 @@ namespace CarApp_michelle
                             text = text.Substring(text.IndexOf(',') + 1, text.Length - (text.IndexOf(',') + 1));
                         }
                         carText.Add(text);
-                        carList.Add(new Car(brand, model, year, gearType, fuelType, kmPerLiter, kmCount));
+                        FuelTypeEnum fuelType = new FuelTypeEnum();
+                        switch (carText[3])
+                        {
+                            case "b":
+                            case "B":
+                                fuelType = FuelTypeEnum.Benzin;
+                                break;
+                            case "d":
+                            case "D":
+                                fuelType = FuelTypeEnum.Diesel;
+                                break;
+                        }
+                        carList.Add(new Car(carText[0], carText[1], Convert.ToInt32(carText[2]), Convert.ToChar(carText[4]), fuelType, Convert.ToDouble(carText[5]), Convert.ToDouble(carText[6])));
                         carIndex = carList.Count - 1;
-                        carList[carIndex].Brand = carText[0];
-                        carList[carIndex].Model = carText[1];
-                        carList[carIndex].Year = Convert.ToInt32(carText[2]);
-                        carList[carIndex].FuelType = Enum.TryParse(carText[3], result: out FuelType);
-                        carList[carIndex].GearType = Convert.ToChar(carText[4]);
-                        carList[carIndex].KmPerLiter = Convert.ToDouble(carText[5]);
-                        carList[carIndex].KmCount = Convert.ToDouble(carText[6]);
                     }
 
                 } while (text != null);
@@ -210,26 +209,27 @@ namespace CarApp_michelle
             Console.WriteLine("6) Vis hele holdets biler");
             Console.WriteLine("7) Start/stop motoren");
             Console.WriteLine("9) Vælg bil");
-            Console.WriteLine("m) Menu");
-            Console.WriteLine("x) Afslut");
+            Console.WriteLine("S) Gem biler");
+            Console.WriteLine("L) Hent biler");
+            Console.WriteLine("M) Menu");
+            Console.WriteLine("X) Afslut");
         }
 
 
 
         // ================================ 1) Indtast biloplysninger ================================
-        static void ReadCarDetails() // løsning 1
+        static Car ReadCarDetails()
         {
-            // Spørg om brugerens bil og sæt variablerne fra brugerens input
-            // Data gemmes i lokale variable som efterfølgende bruges til at oprette et car object 
             Console.Write("Indtast bilmærke: ");
-            brand = Console.ReadLine();
+            string brand = Console.ReadLine();
             Console.Write("Indtast bilmodel: ");
-            model = Console.ReadLine();
+            string model = Console.ReadLine();
             Console.Write("Indtast årgang: ");
-            year = Convert.ToInt32(Console.ReadLine());
+            int year = Convert.ToInt32(Console.ReadLine());
             Console.Write("Indtast geartype (A for automatisk, M for manuel): ");
-            gearType = Console.ReadLine()[0];
+            char gearType = Console.ReadLine()[0];
             Console.Write("Hvilken type brændstof? (B for benzin, D for diesel): ");
+            FuelTypeEnum fuelType;
             char input = Console.ReadLine()[0];
             switch (input)
             {
@@ -241,39 +241,37 @@ namespace CarApp_michelle
                 case 'D':
                     fuelType = FuelTypeEnum.Diesel;
                     break;
+                case 'e':
+                case 'E':
+                    fuelType = FuelTypeEnum.Electric;
+                    break;
+                case 'h':
+                case 'H':
+                    fuelType = FuelTypeEnum.Hybrid;
+                    break;
+                default:
+                    fuelType = FuelTypeEnum.Benzin;
+                    break;
             }
             Console.Write("Hvor langt kan bilen køre på en liter brændstof?: ");
-            kmPerLiter = Convert.ToDouble(Console.ReadLine());
+            double kmPerLiter = Convert.ToDouble(Console.ReadLine());
             Console.Write("Hvad er bilens nuværende kilometerstand?: ");
-            kmCount = Convert.ToInt32(Console.ReadLine());
+            double kmCount = Convert.ToInt32(Console.ReadLine());
+
+            return new Car(brand, model, year, gearType, fuelType, kmPerLiter, kmCount);
         }
 
-        static void ReadCarDetails(Car car) // løsning 0
+        // ================================ 1) Indtast biloplysninger ================================
+        static Trip ReadTripDetails()
         {
-            // Spørg om brugerens bil og sæt variablerne fra brugerens input
-            // Parameteren 'car' er et car object, og dets data sættes direkte via set funktioner
-            Console.Write("Indtast bilmærke: ");
-            car.Brand = Console.ReadLine();
-            Console.Write("Indtast bilmodel: ");
-            car.Model = Console.ReadLine();
-            Console.Write("Indtast årgang: ");
-            car.Year = Convert.ToInt32(Console.ReadLine());
-            Console.Write("Indtast geartype (A for automatisk, M for manuel): ");
-            car.GearType = Console.ReadLine()[0];
-            Console.Write("Hvilken type brændstof? (B for benzin, D for diesel): ");
-            char input = Console.ReadLine()[0];
-            switch (input)
-            {
-                case 'b':
-                case 'B':
-                    car.FuelType = FuelTypeEnum.Benzin;
-                    break;
+            Console.Write("Indtast distance: ");
+            double distance = Convert.ToDouble(Console.ReadLine());
+            Console.Write("Indtast startdato og tid: ");
+            DateTime startTime = DateTime.Parse(Console.ReadLine());
+            Console.Write("Indtast sluttid: ");
+            DateTime endTime = Convert.ToDateTime(Console.ReadLine());
 
-            }
-            Console.Write("Hvor langt kan bilen køre på en liter brændstof?: ");
-            car.KmPerLiter = Convert.ToDouble(Console.ReadLine());
-            Console.Write("Hvad er bilens nuværende kilometerstand?: ");
-            car.KmCount = Convert.ToInt32(Console.ReadLine());
+            return new Trip(carList[carIndex], distance, startTime, endTime);
         }
 
     }

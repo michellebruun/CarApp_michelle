@@ -6,59 +6,37 @@ namespace CarApp_michelle
 {
     internal class Car
     {
-        private string _brand;
-        private string _model;
-        private int _year;
-        private char _gearType;
-        private FuelTypeEnum _fuelType;
-        private double _kmPerLiter;
-        private double _kmCount;
-        private bool _isEngineOn;
+        public string Brand { get; private set; }
+        public string Model { get; private set; }
+        public int Year { get; private set; }
+        public char GearType { get; private set; }
+        public FuelTypeEnum FuelType { get; private set; }
+        public double KmPerLiter { get; private set; }
+        public double KmCount { get; private set; }
+        public bool IsEngineOn { get; private set; }
+
 
         private double calculatedTripPrice;
+        private List<Trip> tripList;
 
-        // Properties
-        public string Brand
-        {
-            get { return _brand; }
-            set { _brand = value; }
-        }
-        public string Model
-        {
-            get { return _model; }
-            set { _model = value; }
-        }
-        public int Year
-        {
-            get { return _year; }
-            set { if (value > 1886) _year = value; }
-        }
-        public char GearType
-        {
-            get { return _gearType; }
-            set { _gearType = value; }
-        }
-        public double KmPerLiter
-        {
-            get { return _kmPerLiter; }
-            set { if (value > 0) _kmPerLiter = value; }
-        }
-        public double KmCount 
-        {
-            get { return _kmCount; }
-            set { if (value > 0) _kmCount = value; }
-        }
-        public FuelTypeEnum FuelType
-        {
-            get; set;
-        }
-        public bool IsEngineOn
-        {
-            get { return _isEngineOn; }
-            set { _isEngineOn = value; }
-        }
 
         // ================================ Konstruktør ================================
+        public Car()
+        {
+            Brand = "-";
+            Model = "-";
+            Year = 0;
+            GearType = 'M';
+            FuelType = FuelTypeEnum.Benzin;
+            KmPerLiter = 0;
+            KmCount = 0;
+
+            IsEngineOn = false;
+            calculatedTripPrice = 0;
+
+            tripList = new List<Trip>();
+        }
+
         public Car(string brand, string model, int year, char gearType, FuelTypeEnum fuelType, double kmPerLiter, double kmCount)
         {
             Brand = brand;
@@ -71,7 +49,15 @@ namespace CarApp_michelle
 
             IsEngineOn = false;
             calculatedTripPrice = 0;
+
+            tripList = new List<Trip>();
         }
+
+        public void TurnOnEngine() => IsEngineOn = true;
+        public void TurnOffEngine() => IsEngineOn = false;
+
+
+        public List<Trip> GetTrips() => tripList;
 
 
         // ================================ Returner bilens data i en string ================================
@@ -83,34 +69,40 @@ namespace CarApp_michelle
         }
 
         // ================================ 2) Kør en køretur ================================
-        public bool Drive(double distance) // Tager en lokal variabel "distance" ind som parameter-input i metoden
+        public void Drive(Trip newTrip)
         {
-            if (IsEngineOn == true)
+            if (newTrip.Car == this)
             {
-                Console.WriteLine($"\nDen originale kilometerstand: {KmCount}");
-                Console.WriteLine("Starter køretur...");
+                if (IsEngineOn == true)
+                {
+                    Console.WriteLine($"\nDen originale kilometerstand: {KmCount}");
+                    Console.WriteLine("Starter køretur...");
 
-                KmCount += distance;
+                    KmCount += newTrip.Distance;
+                    tripList.Add(newTrip);
 
-                Console.WriteLine($"Du har nu kørt: {distance}");
-                Console.WriteLine($"Den nye kilometerstand er: {KmCount}");
+                    Console.WriteLine($"Du har nu kørt: {newTrip.Distance}");
+                    Console.WriteLine($"Den nye kilometerstand er: {KmCount}");
+                }
+                else
+                {
+                    Console.WriteLine("Start bilen først");
+                }
             }
             else
             {
-                Console.WriteLine("Start bilen først");
+                Console.WriteLine("Fejl: Denne tur tilhører ikke denne bil.");
             }
-            return IsEngineOn;
         }
 
-      
         // ================================ 3) Udregn prisen på en køretur ================================
-        public double CalculateTripPrice(double distance, FuelTypeEnum fuelType)
+        public double CalculateTripPrice()
         {
             if (KmPerLiter == 0)          // Check om bilens kmPerLiter er 0, for at undgå et crash pga. division med 0
             {
                 Console.WriteLine("Fejl: kmPerLiter kan ikke være 0!");
             }
-            else if (fuelType != FuelTypeEnum.Benzin && fuelType != FuelTypeEnum.Diesel) // Check om brændstofstypens værdi er noget andet end enten (B)enzin eller (D)iesel, og vis en fejl hvis den er ( != bruges som "ikke lig med", && bruges som "og" )
+            else if (FuelType != FuelTypeEnum.Benzin && FuelType != FuelTypeEnum.Diesel) // Check om brændstofstypens værdi er noget andet end enten (B)enzin eller (D)iesel, og vis en fejl hvis den er ( != bruges som "ikke lig med", && bruges som "og" )
             {
                 Console.WriteLine("Fejl: Ukendt brændstoftype!");
             }
@@ -118,21 +110,22 @@ namespace CarApp_michelle
             {
                 double literPrice = 0;    // Vi ærklærer først bare lige hurtigt en lokal variabel for literprisen på brændstof,
                 string fuelTypeStr = "";  // (og en string til fuelType for at kunne skrive f.eks. "Benzin" i stedet for "B", da fuelType er en char)
-                switch (fuelType)         // og sætter deres værdi baseret på brændstofstypen, så vi er klar til at bruge literprisen i udregningen
+                switch (FuelType)         // og sætter deres værdi baseret på brændstofstypen, så vi er klar til at bruge literprisen i udregningen
                 {
                     case FuelTypeEnum.Benzin:
                         literPrice = 13.49;
-                        fuelTypeStr = fuelType.ToString(); // "Benzin";
+                        fuelTypeStr = FuelType.ToString(); // "Benzin";
                         break;
                     case FuelTypeEnum.Diesel:
                         literPrice = 12.29;
-                        fuelTypeStr = fuelType.ToString(); // "Diesel";
+                        fuelTypeStr = FuelType.ToString(); // "Diesel";
                         break;
                 }
 
+                Trip currentTrip = tripList[tripList.Count - 1]; // brug den sidst kørte tur
+
                 //Beregn prisen for køreturen
-                double fuelNeeded = distance / KmPerLiter;     // Distancen som brugeren skrev ind divideret med bilens km per liter, giver os den nødvendige mængde brændstof for turen
-                calculatedTripPrice = fuelNeeded * literPrice; // Nu ved vi hvor meget brændstof vi skal bruge, og vi kan finde turens pris ved at gange det med literprisen
+                calculatedTripPrice = currentTrip.CalculateTripPrice(literPrice);
 
                 Console.WriteLine("\n================ Oplysninger om køreturen ================");
 
@@ -140,13 +133,10 @@ namespace CarApp_michelle
                 Console.WriteLine($"Bilen kører " + KmPerLiter + " km/l");
                 Console.WriteLine($"Den originale kilometerstand var: {KmCount} km");
 
-                KmCount += distance;
-
                 Console.WriteLine($"Den nye kilometerstand er: {Math.Round(KmCount)} km"); // Bruger Math.Round() til at runde op/ned til nærmeste hele tal, fordi kilometertælleren skulle være en double, men jeg føler det måske lyder lidt fjollet med decimaler i en kilometertæller idk jeg kender ikke så meget til biler for at være helt ærlig :)
                 Console.WriteLine($"Total brændstofudgift: {calculatedTripPrice} kr.");
             }
             return calculatedTripPrice;
-
         }
 
 
